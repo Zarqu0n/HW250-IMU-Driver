@@ -60,32 +60,23 @@ byte MPU6050::readData(byte reg) {
 
 /* SETTER */
 
-byte MPU6050::setGyroConfig(int config_num){
-  byte status;
-  switch(config_num){
-    case 0: // range = +- 250 deg/s
-	  gyro_lsb_to_degsec = 131.0;
-	  status = writeData(MPU6050_GYRO_CONFIG_REGISTER, 0x00);
-	  break;
-	case 1: // range = +- 500 deg/s
-	  gyro_lsb_to_degsec = 65.5;
-	  status = writeData(MPU6050_GYRO_CONFIG_REGISTER, 0x08);
-	  break;
-	case 2: // range = +- 1000 deg/s
-	  gyro_lsb_to_degsec = 32.8;
-	  status = writeData(MPU6050_GYRO_CONFIG_REGISTER, 0x10);
-	  break;
-	case 3: // range = +- 2000 deg/s
-	  gyro_lsb_to_degsec = 16.4;
-	  status = writeData(MPU6050_GYRO_CONFIG_REGISTER, 0x18);
-	  break;
-	default: // error
-	  status = 1;
-	  break;
-  }
-  return status;
+void MPU6050::setDHPFMode(mpu6050_dhpf_t dhpf)
+{
+    uint8_t value;
+    value = readData(MPU6050_ACCEL_CONFIG_REGISTER);
+    value &= 0b11111000;
+    value |= dhpf;
+    writeData(MPU6050_ACCEL_CONFIG_REGISTER, value);
 }
 
+void MPU6050::setDLPFMode(mpu6050_dlpf_t dlpf)
+{
+    uint8_t value;
+    value = readData(MPU6050_REG_CONFIG);
+    value &= 0b11111000;
+    value |= dlpf;
+    writeData(MPU6050_REG_CONFIG, value);
+}
 
 void MPU6050::setI2CBypassEnabled(bool state)
 {
