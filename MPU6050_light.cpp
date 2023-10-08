@@ -86,30 +86,15 @@ byte MPU6050::setGyroConfig(int config_num){
   return status;
 }
 
-byte MPU6050::setAccConfig(int config_num){
-  byte status;
-  switch(config_num){
-    case 0: // range = +- 2 g
-	  acc_lsb_to_g = 16384.0;
-	  status = writeData(MPU6050_ACCEL_CONFIG_REGISTER, 0x00);
-	  break;
-	case 1: // range = +- 4 g
-	  acc_lsb_to_g = 8192.0;
-	  status = writeData(MPU6050_ACCEL_CONFIG_REGISTER, 0x08);
-	  break;
-	case 2: // range = +- 8 g
-	  acc_lsb_to_g = 4096.0;
-	  status = writeData(MPU6050_ACCEL_CONFIG_REGISTER, 0x10);
-	  break;
-	case 3: // range = +- 16 g
-	  acc_lsb_to_g = 2048.0;
-	  status = writeData(MPU6050_ACCEL_CONFIG_REGISTER, 0x18);
-	  break;
-	default: // error
-	  status = 1;
-	  break;
-  }
-  return status;
+
+void MPU6050::setI2CBypassEnabled(bool state)
+{
+    return writeRegisterBit(MPU6050_REG_INT_PIN_CFG, 1, state);
+}
+
+bool MPU6050::getI2CBypassEnabled(void)
+{
+    return readRegisterBit(MPU6050_REG_INT_PIN_CFG, 1);
 }
 
 void MPU6050::setGyroOffsets(float x, float y, float z){
