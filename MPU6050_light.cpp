@@ -179,13 +179,13 @@ void MPU6050::fetchData(){
     rawData[i] |= wire->read();
   }
 
-  accX = ((float)rawData[0]) / acc_lsb_to_g - accXoffset;
-  accY = ((float)rawData[1]) / acc_lsb_to_g - accYoffset;
-  accZ = (!upsideDownMounting - upsideDownMounting) * ((float)rawData[2]) / acc_lsb_to_g - accZoffset;
+  accX = ((float)rawData[0]) * rangePerDigit * G - accXoffset;
+  accY = ((float)rawData[1]) * rangePerDigit * G - accYoffset;
+  accZ = (!upsideDownMounting - upsideDownMounting) * ((float)rawData[2]) * rangePerDigit * G - accZoffset;
   temp = (rawData[3] + TEMP_LSB_OFFSET) / TEMP_LSB_2_DEGREE;
-  gyroX = ((float)rawData[4]) / gyro_lsb_to_degsec - gyroXoffset;
-  gyroY = ((float)rawData[5]) / gyro_lsb_to_degsec - gyroYoffset;
-  gyroZ = ((float)rawData[6]) / gyro_lsb_to_degsec - gyroZoffset;
+  gyroX = ((float)rawData[4]) * dpsPerDigit * DEG_2_RAD - gyroXoffset;
+  gyroY = ((float)rawData[5]) * dpsPerDigit * DEG_2_RAD - gyroYoffset;
+  gyroZ = ((float)rawData[6]) * dpsPerDigit * DEG_2_RAD - gyroZoffset;
 }
 
 void MPU6050::update(){
@@ -194,8 +194,8 @@ void MPU6050::update(){
   
   // estimate tilt angles: this is an approximation for small angles!
   float sgZ = accZ<0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
-  angleAccX =   atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
-  angleAccY = - atan2(accX,     sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG; // [- 90,+ 90] deg
+  angleAccX =   atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)); // [-180,+180] deg
+  angleAccY = - atan2(accX,     sqrt(accZ*accZ + accY*accY)); // [- 90,+ 90] deg
 
   unsigned long Tnew = millis();
   float dt = (Tnew - preInterval) * 1e-3;
@@ -203,8 +203,8 @@ void MPU6050::update(){
 
   // Correctly wrap X and Y angles (special thanks to Edgar Bonet!)
   // https://github.com/gabriel-milan/TinyMPU6050/issues/6
-  angleX = wrap(filterGyroCoef*(angleAccX + wrap(angleX +     gyroX*dt - angleAccX,180)) + (1.0-filterGyroCoef)*angleAccX,180);
-  angleY = wrap(filterGyroCoef*(angleAccY + wrap(angleY + sgZ*gyroY*dt - angleAccY, 90)) + (1.0-filterGyroCoef)*angleAccY, 90);
+  angleX = wrap(filterGyroCoef*(angleAccX + wrap(angleX +     gyroX*dt - angleAccX,M_PI)) + (1.0-filterGyroCoef)*angleAccX,M_PI);
+  angleY = wrap(filterGyroCoef*(angleAccY + wrap(angleY + sgZ*gyroY*dt - angleAccY, M_PI_2)) + (1.0-filterGyroCoef)*angleAccY, M_PI_2);
   angleZ += gyroZ*dt; // not wrapped
 
 }
