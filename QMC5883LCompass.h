@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "Wire.h"
 
+} qmc5883l_osr_t;
 
 class QMC5883LCompass{
 	
