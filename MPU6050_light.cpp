@@ -25,13 +25,13 @@ MPU6050::MPU6050(TwoWire &w){
   setAccOffsets(0,0,0);
 }
 
-byte MPU6050::begin(int gyro_config_num, int acc_config_num){
+byte MPU6050::init(mpu6050_dps_t gyro_fs, mpu6050_range_t acc_range){
   // changed calling register sequence [https://github.com/rfetick/MPU6050_light/issues/1] -> thanks to augustosc
   byte status = writeData(MPU6050_PWR_MGMT_1_REGISTER, 0x01); // check only the first connection with status
   writeData(MPU6050_SMPLRT_DIV_REGISTER, 0x00);
   writeData(MPU6050_CONFIG_REGISTER, 0x00);
-  setGyroConfig(gyro_config_num);
-  setAccConfig(acc_config_num);
+  setGyroConfig(gyro_fs);
+  setAccConfig(acc_range);
   
   this->update();
   angleX = this->getAccAngleX();
@@ -58,7 +58,115 @@ byte MPU6050::readData(byte reg) {
   return data;
 }
 
+bool MPU6050::readRegisterBit(uint8_t reg, uint8_t pos)
+{
+    uint8_t value;
+    value = readData(reg);
+    return ((value >> pos) & 1);
+}
+
+// Write register bit
+void MPU6050::writeRegisterBit(uint8_t reg, uint8_t pos, bool state)
+{
+    uint8_t value;
+    value = readData(reg);
+
+    if (state)
+    {
+        value |= (1 << pos);
+    } else 
+    {
+        value &= ~(1 << pos);
+    }
+
+    writeData(reg, value);
+}
+
 /* SETTER */
+
+void MPU6050::setGyroConfig(mpu6050_dps_t gyro_fs){
+  setScale(gyro_fs);
+  setGyroOffsets(0,0,0);
+}
+
+void MPU6050::setScale(mpu6050_dps_t scale){
+    uint8_t value;
+
+    switch (scale)
+    {
+	case MPU6050_SCALE_250DPS:
+	    dpsPerDigit = .007633f;
+	    break;
+	case MPU6050_SCALE_500DPS:
+	    dpsPerDigit = .015267f;
+	    break;
+	case MPU6050_SCALE_1000DPS:
+	    dpsPerDigit = .030487f;
+	    break;
+	case MPU6050_SCALE_2000DPS:
+	    dpsPerDigit = .060975f;
+	    break;
+	default:
+	    break;
+    }
+
+    value = readData(MPU6050_GYRO_CONFIG_REGISTER);
+    value &= 0b11100111;
+    value |= (scale << 3);
+    writeData(MPU6050_GYRO_CONFIG_REGISTER, value);
+}
+
+
+void MPU6050::setAccConfig(mpu6050_range_t acc_range){
+  setRange(acc_range);
+  setAccOffsets(0,0,0);
+}
+
+void MPU6050::setRange(mpu6050_range_t range)
+{
+    uint8_t value;
+
+    switch (range)
+    {
+	case MPU6050_RANGE_2G:
+	    rangePerDigit = .000061f;
+	    break;
+	case MPU6050_RANGE_4G:
+	    rangePerDigit = .000122f;
+	    break;
+	case MPU6050_RANGE_8G:
+	    rangePerDigit = .000244f;
+	    break;
+	case MPU6050_RANGE_16G:
+	    rangePerDigit = .0004882f;
+	    break;
+	default:
+	    break;
+    }
+
+    value = readData(MPU6050_ACCEL_CONFIG_REGISTER);
+    value &= 0b11100111;
+    value |= (range << 3);
+    writeData(MPU6050_ACCEL_CONFIG_REGISTER, value);
+}
+
+mpu6050_dps_t MPU6050::getScale(void)
+{
+    uint8_t value;
+    value = readData(MPU6050_GYRO_CONFIG_REGISTER);
+    value &= 0b00011000;
+    value >>= 3;
+    return (mpu6050_dps_t)value;
+}
+
+mpu6050_range_t MPU6050::getRange(void)
+{
+    uint8_t value;
+    value = readData(MPU6050_ACCEL_CONFIG_REGISTER);
+    value &= 0b00011000;
+    value >>= 3;
+    return (mpu6050_range_t)value;
+}
 
 void MPU6050::setDHPFMode(mpu6050_dhpf_t dhpf)
 {
@@ -107,6 +215,28 @@ void MPU6050::setFilterGyroCoef(float gyro_coeff){
 
 void MPU6050::setFilterAccCoef(float acc_coeff){
   setFilterGyroCoef(1.0-acc_coeff);
+}
+
+/* GETTER */
+
+Vector MPU6050::getGyroOffset(){
+  return Vector(gyroXoffset,gyroYoffset,gyroZoffset);
+}
+
+Vector MPU6050::getAccOffset(){
+  return Vector(accXoffset,accYoffset,accZoffset);
+}
+
+Vector MPU6050::getAccRaw(){
+  return Vector(accX,accY,accZ);
+}
+
+Vector MPU6050::getGyroRaw(){
+  return Vector(gyroX,gyroY,gyroZ);
+}
+
+Vector MPU6050::getGyroAngle(){
+  return  Vector(angleX,angleY,angleZ);
 }
 
 /* CALC OFFSET */
