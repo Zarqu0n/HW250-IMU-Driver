@@ -25,7 +25,7 @@
 
 #define MPU6050_GYRO_OUT_REGISTER     0x43
 #define MPU6050_ACCEL_OUT_REGISTER    0x3B
-
+#define MPU6050_REG_INT_PIN_CFG       0x37 // INT Pin. Bypass Enable Configuration
 #define RAD_2_DEG             57.29578 // [deg/rad]
 #define CALIB_OFFSET_NB_MES   500
 #define TEMP_LSB_2_DEGREE     340.0    // [bit/celsius]
