@@ -94,11 +94,12 @@ void QMC5883LCompass::setADDR(byte b){
 	@since v0.1;
 **/
 // Write register values to chip
-void QMC5883LCompass::_writeReg(byte r, byte v){
+byte QMC5883LCompass::_writeReg(byte r, byte v){
 	Wire.beginTransmission(_ADDR);
 	Wire.write(r);
 	Wire.write(v);
-	Wire.endTransmission();
+	byte status = Wire.endTransmission();
+	return status;
 }
 
 
