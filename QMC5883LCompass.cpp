@@ -111,7 +111,7 @@ byte QMC5883LCompass::_writeReg(byte r, byte v){
 **/
 // Set chip mode
 void QMC5883LCompass::setMode(byte mode, byte odr, byte rng, byte osr){
-	_writeReg(0x09,mode|odr|rng|osr);
+	_writeReg(QMC5883L_CONFIG_REGISTER,mode|odr|rng|osr);
 }
 
 
